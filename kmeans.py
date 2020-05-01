@@ -23,7 +23,7 @@ def kmeans(boxs, k):
     np.random.seed(42)
 
     clusters = boxs[np.random.choice(n_samples, k, replace=False)]
-    boxs_cluster = np.zeros(shape=(n_samples, k))
+    distances = np.zeros(shape=(n_samples, k))
 
     last_cluster = np.zeros(shape=(n_samples, ))
     ious = []
@@ -31,9 +31,9 @@ def kmeans(boxs, k):
 
     while i < 200:
         for row in range(n_samples):
-            boxs_cluster[row] = iou(boxs[row], clusters)
+            distances[row] = 1 - iou(boxs[row], clusters)
 
-        nearest_cluster = np.argmax(boxs_cluster, axis=1)
+        nearest_cluster = np.argmin(distances, axis=1)
 
         if (last_cluster == nearest_cluster).all():
             break
@@ -43,7 +43,7 @@ def kmeans(boxs, k):
 
         last_cluster = nearest_cluster
 
-        ious.append(np.median(np.median(boxs_cluster, axis=1)))
+        ious.append(np.median(np.median(distances, axis=1)))
         i += 1
 
     return ious

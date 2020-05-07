@@ -66,7 +66,7 @@ def reposition_x_y(width, height, x_min, x_max, y_min, y_max):
     if width <= height:
         scale = height / config.IMAGE_HEIGHT
 
-        pad = (width - width / scale) / 2
+        pad = (config.IMAGE_WIDTH - width / scale) / 2
         x_min = x_min / scale + pad
         x_max = x_max / scale - pad
 
@@ -75,7 +75,7 @@ def reposition_x_y(width, height, x_min, x_max, y_min, y_max):
     else:
         scale = width / config.IMAGE_WIDTH
 
-        pad = (height - height / scale) / 2
+        pad = (config.IMAGE_HEIGHT - height / scale) / 2
 
         x_min = x_min / scale
         x_max = x_max / scale
@@ -110,13 +110,13 @@ def parse_single_xml_file(file_name):
         """here we need to calculate the x_min、x_max according to the target image size"""
         x_min, x_max, y_min, y_max = reposition_x_y(width, height, x_min, x_max, y_min, y_max)
 
-        boxs.append([config.PASCAL_VOC_CLASSES[category_name], x_min, x_max, y_min, y_max])
+        boxs.append([config.PASCAL_VOC_CLASSES[category_name], x_min, y_min, x_max, y_max])
 
     return [image_name, boxs]
 
 
 def write_to_txt(datas):
-    inputs = open('pascal.txt', 'a')
+    inputs = open('pascal_data.txt', 'a')
 
     for item in data:
         lines = item[0]
@@ -135,5 +135,5 @@ if __name__ == '__main__':
     data = parse_xml_data(config.ANOATATIONS_PATH)
     write_to_txt(data)
 
-    print("spend %s " %(time.clock()))
+    print("spend %s " % (time.clock()))
 

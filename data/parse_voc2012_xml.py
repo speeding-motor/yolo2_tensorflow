@@ -31,20 +31,23 @@ def parse_xml_for_box(xml, boxs):
     width = 0
     height = 0
 
+    cell_size = config.IMAGE_HEIGHT / config.GRID_SIZE
+
     for size in sizes:
         width = size.getElementsByTagName('width')[0].childNodes[0].data
         height = size.getElementsByTagName('height')[0].childNodes[0].data
 
     for box in bndboxs:
-        xmin = box.getElementsByTagName('xmin')[0].childNodes[0].data
-        xmax = box.getElementsByTagName('xmax')[0].childNodes[0].data
-        ymin = box.getElementsByTagName('ymin')[0].childNodes[0].data
-        ymax = box.getElementsByTagName('ymax')[0].childNodes[0].data
+        x_min = box.getElementsByTagName('xmin')[0].childNodes[0].data
+        x_max = box.getElementsByTagName('xmax')[0].childNodes[0].data
+        y_min = box.getElementsByTagName('ymin')[0].childNodes[0].data
+        y_max = box.getElementsByTagName('ymax')[0].childNodes[0].data
 
-        w = (float(xmax) - float(xmin)) / float(width)
-        h = (float(ymax) - float(ymin)) / float(height)
+        x_min, x_max, y_min, y_max = reposition_x_y(width, height, x_min, x_max, y_min, y_max)
+        relative_w = (float(x_max) - float(x_min)) / cell_size  # get the relative w of the grid cell size
+        relative_h = (float(y_max) - float(y_min)) / cell_size
 
-        boxs.append([w, h])
+        boxs.append([relative_w, relative_h])
     return boxs
 
 
@@ -68,7 +71,7 @@ def reposition_x_y(width, height, x_min, x_max, y_min, y_max):
 
         pad = (config.IMAGE_WIDTH - width / scale) / 2
         x_min = x_min / scale + pad
-        x_max = x_max / scale - pad
+        x_max = x_max / scale + pad
 
         y_min = y_min / scale
         y_max = y_max / scale
@@ -81,9 +84,9 @@ def reposition_x_y(width, height, x_min, x_max, y_min, y_max):
         x_max = x_max / scale
 
         y_min = y_min / scale + pad
-        y_max = y_max / scale - pad
+        y_max = y_max / scale + pad
 
-    return x_min, x_max, y_min, y_max
+    return int(x_min), int(x_max), int(y_min), int(y_max)
 
 
 def parse_single_xml_file(file_name):
@@ -96,7 +99,7 @@ def parse_single_xml_file(file_name):
 
     for size in sizes:
         width = size.getElementsByTagName('width')[0].childNodes[0].data
-        height = size.getElementsByTagName('width')[0].childNodes[0].data
+        height = size.getElementsByTagName('height')[0].childNodes[0].data
 
     for obj in objects:
         category_name = obj.getElementsByTagName('name')[0].childNodes[0].data
@@ -115,7 +118,7 @@ def parse_single_xml_file(file_name):
     return [image_name, boxs]
 
 
-def write_to_txt(datas):
+def write_to_txt(data):
     inputs = open('pascal_data.txt', 'a')
 
     for item in data:
@@ -129,11 +132,12 @@ def write_to_txt(datas):
 
 
 if __name__ == '__main__':
+    """to test the kmeans"""
     # boxs = get_boxs_from_xml(config.ANOATATIONS_PATH)
     # print(boxs.shape)
 
-    data = parse_xml_data(config.ANOATATIONS_PATH)
-    write_to_txt(data)
+    dataset = parse_xml_data(config.ANOATATIONS_PATH)
+    write_to_txt(dataset)
 
     print("spend %s " % (time.clock()))
 

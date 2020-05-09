@@ -94,17 +94,17 @@ if __name__ == '__main__':
 
     boxs_wh = parse_voc2012_xml.get_boxs_from_xml(config.ANOATATIONS_PATH)
 
-    # box_ious3 = kmeans(boxs_wh=boxs_wh, k=3)
+    box_ious3 = kmeans(boxs_wh=boxs_wh, k=3)
     box_ious5 = kmeans(boxs_wh=boxs_wh, k=5)
     # box_ious6 = kmeans(boxs_wh=boxs_wh, k=6)
     # box_ious7 = kmeans(boxs_wh=boxs_wh, k=7)
     box_ious9 = kmeans(boxs_wh=boxs_wh, k=9)
-    box_ious11 = kmeans(boxs_wh=boxs_wh, k=11)
+    # box_ious11 = kmeans(boxs_wh=boxs_wh, k=11)
     #
-    # pyplot.plot(box_ious3, color='green')
+    pyplot.plot(box_ious3, color='green')
     pyplot.plot(box_ious5, color='black')
     # pyplot.plot(box_ious6, color='black')
     # pyplot.plot(box_ious7, color='red')
     pyplot.plot(box_ious9, color='blue')
-    pyplot.plot(box_ious11, color='blue')
+    # pyplot.plot(box_ious11, color='blue')
     pyplot.show()

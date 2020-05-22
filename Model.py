@@ -3,7 +3,7 @@
 # @Author  : speeding_motor
 
 from tensorflow import keras
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, BatchNormalization
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, BatchNormalization, Reshape
 import config
 
 
@@ -40,7 +40,10 @@ class DarkNet19(keras.Model):
         self.conv17 = Conv2D(filters=512,  kernel_size=(1, 1), padding='same', name='conv_17')
         self.conv18 = Conv2D(filters=1024,  kernel_size=(3, 3), padding='same', name='conv_18')
 
-        self.conv19 = Conv2D(filters=config.ANCHOR_SIZE * (5 + config.CLASS_NUM),  kernel_size=(1, 1), padding='valid', name='conv_19')
+        self.conv19 = Conv2D(filters=config.ANCHOR_SIZE * (5 + config.CLASS_NUM),  kernel_size=(1, 1), padding='valid',
+                             name='conv_19')
+        self.conv20 = Reshape(target_shape=(config.GRID_SIZE, config.GRID_SIZE, config.ANCHOR_SIZE, 5 + config.CLASS_NUM),
+                              name='reshape')
 
     def call(self, inputs):
         outputs = self.conv1(inputs)
@@ -73,6 +76,7 @@ class DarkNet19(keras.Model):
         outputs = self.conv18(outputs)
 
         outputs = self.conv19(outputs)
+        outputs = self.conv20(outputs)
 
         return outputs
 

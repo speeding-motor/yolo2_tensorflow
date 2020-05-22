@@ -25,3 +25,5 @@ PASCAL_VOC_CLASSES = {"person": 1, "bird": 2, "cat": 3, "cow": 4, "dog": 5,
                       "pottedplant": 18, "sofa": 19, "tvmonitor": 20}
 
 CLASS_NUM = len(PASCAL_VOC_CLASSES)
+
+DEBUG = True

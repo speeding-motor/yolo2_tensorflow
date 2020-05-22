@@ -6,7 +6,6 @@ from Model import DarkNet19
 from loss import YoloLoss
 import pascal
 from config import EPOCHS
-import numpy as np
 import tensorflow as tf
 
 
@@ -29,10 +28,13 @@ def main():
                 y_pred = yolo(train_image)
                 loss = yololoss(y_true=train_labels, y_pred=y_pred)
 
-            gradient = tape.gradient(loss, yolo.trainable_variables)
-            optimizer.apply_gradients(grads=gradient)
+            grads = tape.gradient(loss, yolo.trainable_variables)
+            optimizer.apply_gradients(zip(grads, yolo.trainable_weights))
 
-        print(loss)
+            print("loss={}".format(loss.numpy()))
+
+        if epoch % 1 == 0:
+            print("epoch is {}  loss is {}".format(epoch, loss))
 
 
 if __name__ == '__main__':

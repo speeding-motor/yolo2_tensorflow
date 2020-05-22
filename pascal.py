@@ -39,9 +39,9 @@ def get_train_images(image_names):
         image = tf.image.resize_with_pad(image, config.IMAGE_HEIGHT, config.IMAGE_WIDTH)
 
         image = image / 255.0
-        batch_image.append(image)
+        batch_image.append(image.numpy())
 
-    return batch_image
+    return np.array(batch_image)
 
 
 def get_train_labels(batch_box):

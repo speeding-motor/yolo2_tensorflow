@@ -67,11 +67,12 @@ def get_train_labels(batch_box):
     batch_box = np.reshape(batch_boxs_format, newshape=(batch_size, MAX_BOX_PER_PICTURE, 5))
 
     batch_xy = (batch_box[..., 3:5] + batch_box[..., 1:3]) // 2
-    batch_wh = (batch_box[..., 3:5] - batch_box[..., 1:3]) / grid_cell_size
+    batch_wh = (batch_box[..., 3:5] - batch_box[..., 1:3])
 
     batch_grid_id = np.floor(batch_xy / config.IMAGE_HEIGHT * config.GRID_SIZE).astype(int)
 
-    batch_box[..., 1:3] = (batch_xy - batch_grid_id * grid_cell_size) / grid_cell_size
+    # batch_box[..., 1:3] = (batch_xy - batch_grid_id * grid_cell_size) / grid_cell_size
+    batch_box[..., 1:3] = batch_xy / grid_cell_size
     batch_box[..., 3:5] = batch_wh / grid_cell_size
 
     true_label = np.zeros(shape=(batch_size, GRID_SIZE, GRID_SIZE, ANCHOR_SIZE, 5 + CLASS_NUM))

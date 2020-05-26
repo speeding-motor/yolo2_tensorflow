@@ -15,7 +15,6 @@ BATCH_SIZE = 12
 GRID_SIZE = 13  # cell number per
 MAX_BOX_PER_PICTURE = 20
 ANCHOR_SIZE = 5
-# ANCHORS = [[116, 90], [156, 198], [373, 326], [30, 61], [62, 45], [59, 119], [10, 13], [16, 30], [33, 23]]
 ANCHORS = [[10.54, 8.08], [2.43, 2.88], [0.86, 1.10], [3.36, 6.07], [6.38, 6.84]]
 
 PASCAL_VOC_CLASSES = {"person": 1, "bird": 2, "cat": 3, "cow": 4, "dog": 5,

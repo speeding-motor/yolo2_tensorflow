@@ -4,7 +4,7 @@
 
 from tensorflow import keras
 import tensorflow as tf
-from config import GRID_SIZE, BATCH_SIZE, ANCHOR_SIZE
+from config import GRID_SIZE, BATCH_SIZE, ANCHOR_SIZE, ANCHORS
 
 
 class YoloLoss(keras.losses.Loss):
@@ -18,16 +18,21 @@ class YoloLoss(keras.losses.Loss):
         self.cell_grid = tf.tile(tf.concat([cell_x, cell_y], axis=-1), [BATCH_SIZE, 1, 1, ANCHOR_SIZE, 1])
 
     def call(self, y_true, y_pred):
-        boxs_mask = tf.cast(tf.expand_dims(y_true[..., 0], axis=-1), dtype=tf.float32)  # whether have boxs or not,[confidence, x, y, w, h]
+        """
+        it means there have box when the confidence of box > 0, confidence = IOU
 
-        coord_loss = self.coordinate_loss(y_true[..., 1:3], y_pred[..., 1:3], boxs_mask)
-        wh_loss = self.coordinate_
+        """
+        object_mask = tf.cast(tf.expand_dims(y_true[..., 0] > 0, axis=-1), dtype=tf.float32) # whether have boxs or not,[confidence, x, y, w, h]
 
+        self.pred_xy = tf.sigmoid(y_pred[..., 1:3]) + tf.cast(self.cell_grid, float)
+        self.pred_wh = tf.exp(y_pred[..., 3:5]) * tf.reshape(ANCHORS, [1, 1, 1, ANCHOR_SIZE, 2])
 
+        coord_loss = self.coordinate_loss(y_true[..., 0:5], y_pred[..., 0:5], object_mask)
+        conf_loss = self.confidence_loss(y_true, y_pred, object_mask)
 
-        return coord_loss
+        return coord_loss + conf_loss
 
-    def coordinate_loss(self, true_xy, pred_xy, boxs_mask):
+    def coordinate_loss(self, true_boxs, pred_boxs, object_mask):
         """
         coordinate loss contain the xy loss, wh loss
         First: xy_loss ,sigmoid the predict xy, and then add the cell_grad,
@@ -36,15 +41,70 @@ class YoloLoss(keras.losses.Loss):
         ignore the box coordinate loss
 
         """
-        nb_boxs = tf.reduce_sum(tf.cast(boxs_mask, dtype=tf.float32))
+        nb_box_mask = tf.reduce_sum(object_mask)
 
-        pred_coord_xy = tf.sigmoid(pred_xy) + tf.cast(self.cell_grid, dtype=tf.float32)
+        # center_xy loss
+        true_center = true_boxs[..., 1:3]
+        xy_loss = tf.reduce_sum(tf.square(true_center - self.pred_xy) * object_mask) / (nb_box_mask + 1e-6)
 
-        coord_loss = tf.reduce_sum(tf.square(true_xy - pred_coord_xy) * boxs_mask) / (nb_boxs + 1e-6)
+        # weight & height loss
+        true_wh = true_boxs[..., 3:5]
+        wh_loss = tf.reduce_sum(tf.square(true_wh - self.pred_wh) * object_mask) / (nb_box_mask + 1e-6)
 
-        return coord_loss
+        return xy_loss + wh_loss
+
+    def confidence_loss(self, y_true, y_pred, object_mask):
+        """
+        # true_conf: = iou between true_box and anchor box, iou(Intersection over union) wrong
+        true_conf = iou between true_box and pred_box, and then multiple the probability with object
+        conf_mask
+
+        """
+        pred_conf = tf.sigmoid(y_pred[..., 0])  # adjust pred_conf to 0 ~ 1
+        object_mask = tf.squeeze(object_mask, axis=-1)
+        nb_object_mask = tf.reduce_sum(object_mask)
+
+        iou = self.iou(y_true[..., 1:5])  # calculate the IOU between true_box and pred_box
+        true_conf = iou * y_true[..., 0]
+
+        obj_conf_loss = tf.reduce_sum(tf.square(true_conf - pred_conf) * object_mask) / (nb_object_mask + 1e-6)
+        noobj_conf_loss = tf.reduce_sum(tf.square(true_conf - pred_conf) * (1-object_mask)) / (nb_object_mask + 1e-6)
+
+        return obj_conf_loss + noobj_conf_loss / 2
+
+    def iou(self, true_box):
+        """
+        :param true_box: shape=[batch_size, grid_h, grid_w, anchor_id ,box], box=[x, y, w, h]
+        :param pred_box: shape=[batch_size, grid_h, grid_w, anchor_id ,box], box=[x, y, w, h]
+        :return the iou between true_box and pred_box, return shape=[batch_size, grid_h, grid_w, anchor_id, 1]
+
+        """
+        # true box radius
+        true_box_xy = true_box[..., 0:2]
+        true_box_half_wh = true_box[..., 2:4] / 2
+
+        true_box_xy_min = true_box_xy - true_box_half_wh
+        true_box_xy_max = true_box_xy + true_box_half_wh
+
+        # pred box radius
+
+        pred_box_half_wh = self.pred_wh / 2
+
+        pred_box_xy_min = self.pred_xy - pred_box_half_wh
+        pred_box_xy_max = self.pred_xy + pred_box_half_wh
+
+        inter_section_min_xy = tf.maximum(true_box_xy_min, pred_box_xy_min)
+        inter_section_max_xy = tf.minimum(true_box_xy_max, pred_box_xy_max)
+
+        inter_section_wh = tf.maximum(inter_section_max_xy - inter_section_min_xy, 0.)
+
+        union_area = inter_section_wh[..., 0] * inter_section_wh[..., 1]
+
+        pred_area = self.pred_wh[..., 0] * self.pred_wh[..., 1]
+        true_area = true_box[..., 2] * true_box[..., 3]
+
+        return union_area / (pred_area + true_area - union_area)
 
 
 if __name__ == '__main__':
     loss = YoloLoss()
-    loss([1], [0])

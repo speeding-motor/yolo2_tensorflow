@@ -5,7 +5,7 @@
 
 # Troble:
 
-1. #### NAN , LOSS InCrease 
+1. #### NAN , LOSS INCrease ERROR 
 
    when i use :	
 

@@ -26,3 +26,8 @@ PASCAL_VOC_CLASSES = {"person": 1, "bird": 2, "cat": 3, "cow": 4, "dog": 5,
 CLASS_NUM = len(PASCAL_VOC_CLASSES)
 
 DEBUG = True
+LOSS_COORD_SCALE = 5
+LOSS_NOOBJ_SCALE = 0.05
+LOSS_OBJ_SCALE = 1
+
+THRESHOLD_IOU = 0.6

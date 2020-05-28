@@ -85,7 +85,7 @@ def get_train_labels(batch_box):
         grid_id = batch_grid_id[i][vaild_mask[i]]
         boxs = batch_box[i][vaild_mask[i]]
 
-        iou_value = IOU().iou(box_wh, anchor_boxs=ANCHORS)
+        iou_value = IOU.iou_with_anchor(box_wh, anchor_boxs=ANCHORS)
 
         best_anchor = np.argmax(iou_value, axis=1)  # which anchor is the best anchor for the box
 

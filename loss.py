@@ -81,16 +81,12 @@ class YoloLoss(keras.losses.Loss):
 
             iou_scores = IOU.best_iou(true_box, pred_box[b])  # return the shape [13, 13, 5, len(true_box)]
             best_ious = tf.reduce_max(iou_scores, axis=-1)
-            thres_hold = best_ious < THRESHOLD_IOU
-
             ignore_mask = ignore_mask.write(b, tf.cast(best_ious < THRESHOLD_IOU, dtype=tf.float32))
 
             return b + 1, ignore_mask
 
         _, ignore_mask = tf.while_loop(lambda b, *args: b < BATCH_SIZE, loop_body, [0, ignore_mask])
         ignore_mask = ignore_mask.stack()
-        i = ignore_mask.numpy()
-        test = tf.boolean_mask(ignore_mask, ignore_mask == 0)
 
         obj_conf_loss = tf.reduce_sum(tf.square(true_conf - pred_conf) * self.object_mask)
         noobj_conf_loss = tf.reduce_sum(tf.square(true_conf - pred_conf) * (1 - self.object_mask) * ignore_mask)

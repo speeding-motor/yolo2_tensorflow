@@ -57,6 +57,8 @@ def get_train_labels(batch_box):
 
     """
     batch_size = len(batch_box)
+    true_labels = np.zeros(shape=(batch_size, GRID_SIZE, GRID_SIZE, ANCHOR_SIZE, 5 + CLASS_NUM))
+
     grid_cell_size = config.IMAGE_HEIGHT / config.GRID_SIZE
 
     batch_boxs_format = np.zeros(shape=(len(batch_box), MAX_BOX_PER_PICTURE * 5))
@@ -70,20 +72,15 @@ def get_train_labels(batch_box):
     batch_xy = (batch_box[..., 3:5] + batch_box[..., 1:3]) // 2
     batch_wh = (batch_box[..., 3:5] - batch_box[..., 1:3]) / grid_cell_size
 
-    batch_grid_id = np.floor(batch_xy / config.IMAGE_HEIGHT * config.GRID_SIZE).astype(int)
-
-    # batch_box[..., 1:3] = (batch_xy - batch_grid_id * grid_cell_size) / grid_cell_size
     batch_box[..., 1:3] = batch_xy / grid_cell_size
     batch_box[..., 3:5] = batch_wh
 
-    true_label = np.zeros(shape=(batch_size, GRID_SIZE, GRID_SIZE, ANCHOR_SIZE, 5 + CLASS_NUM))
-    vaild_mask = batch_box[..., 0] > 0  # have box mask
+    vaild_mask = batch_box[..., 0] > 0  # have box mask , shape = [batch_size, max_box_per_picture]
 
     for i in range(batch_size):
-
-        box_wh = batch_wh[i][vaild_mask[i]]
-        grid_id = batch_grid_id[i][vaild_mask[i]]
         boxs = batch_box[i][vaild_mask[i]]
+        box_wh = boxs[..., 3:5]
+        grid_id = np.floor(boxs[..., 1:3]).astype(int)
 
         iou_value = IOU.iou_with_anchor(box_wh, anchor_boxs=ANCHORS)
 
@@ -93,15 +90,14 @@ def get_train_labels(batch_box):
 
             anchor_id = best_anchor[j]
             class_id = int(boxs[j][0])
-            x = grid_id[j][0]
-            y = grid_id[j][1]
+            w = grid_id[j][0]
+            h = grid_id[j][1]
 
-            true_label[i][x, y, anchor_id][0] = 1.0
-            # true_label[i][x, y, anchor_id][0] = iou_value[j][anchor_id]
-            true_label[i][x, y, anchor_id][1:5] = boxs[j][1: 5]
-            true_label[i][x, y, anchor_id][class_id - 1 + 5] = 1
+            true_labels[i][h, w, anchor_id][0] = 1.0  # probability, attation: h, w, anchor_id?
+            true_labels[i][h, w, anchor_id][1:5] = boxs[j][1: 5]
+            true_labels[i][h, w, anchor_id][class_id - 1 + 5] = 1
 
-    return true_label
+    return true_labels
 
 
 if __name__ == '__main__':

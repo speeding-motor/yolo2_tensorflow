@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class IOU():
+class IOU(object):
     def __init__(self):
         super(IOU, self).__init__()
 
@@ -63,5 +63,35 @@ class IOU():
 
         return union_area / (pred_area + true_area - union_area)
 
+    @staticmethod
+    def iou(true_box, pred_box):
+        """
+        :param true_box: shape=[batch_size, grid_h, grid_w, anchor_id ,box], box=[x, y, w, h]
+        :param pred_box: shape=[batch_size, grid_h, grid_w, anchor_id ,box], box=[x, y, w, h]
+        :return the iou between true_box and pred_box, return shape=[batch_size, grid_h, grid_w, anchor_id, 1]
 
+        """
+        # true box radius
+        true_box_xy = true_box[..., 0:2]
+        true_box_half_wh = true_box[..., 2:4] / 2
+        true_box_xy_min = true_box_xy - true_box_half_wh
+        true_box_xy_max = true_box_xy + true_box_half_wh
+
+        # pred box radius
+        pred_xy = pred_box[..., 0:2]
+        pred_box_half_wh = pred_box[..., 2:4] / 2
+        pred_box_xy_min = pred_xy - pred_box_half_wh
+        pred_box_xy_max = pred_xy + pred_box_half_wh
+
+        inter_section_min_xy = tf.maximum(true_box_xy_min, pred_box_xy_min)
+        inter_section_max_xy = tf.minimum(true_box_xy_max, pred_box_xy_max)
+
+        inter_section_wh = tf.maximum(inter_section_max_xy - inter_section_min_xy, 0.)
+
+        union_area = inter_section_wh[..., 0] * inter_section_wh[..., 1]
+
+        pred_area = pred_box[..., 2] * pred_box[..., 3]
+        true_area = true_box[..., 2] * true_box[..., 3]
+
+        return union_area / (pred_area + true_area - union_area)
 

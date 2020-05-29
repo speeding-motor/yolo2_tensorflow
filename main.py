@@ -18,6 +18,7 @@ def main():
     optimizer = tf.optimizers.Adam(learning_rate=0.001)
 
     for epoch in range(EPOCHS):
+        i = 0
         for batch in batch_data.as_numpy_iterator():
 
             batch_names, batch_boxs = pascal.parse_batch_set(batch)
@@ -30,8 +31,8 @@ def main():
 
             grads = tape.gradient(loss, yolo.trainable_variables)
             optimizer.apply_gradients(zip(grads, yolo.trainable_weights))
-
-            print("loss={}".format(loss.numpy()))
+            i = i + 1
+            print("epoch {} batch_index={}  loss={}".format(epoch, i, loss.numpy()))
 
         if epoch % 1 == 0:
             print("epoch is {}  loss is {}".format(epoch, loss))

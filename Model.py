@@ -94,7 +94,7 @@ class DarkNet19(keras.Model):
         self.relu18 = LeakyReLU(name='relu18')
 
         self.conv19 = Conv2D(filters=config.ANCHOR_SIZE * (5 + config.CLASS_NUM),  kernel_size=(1, 1), padding='valid',
-                             name='conv_19')
+                             name='conv_19', activation='softmax')
         self.relu19 = ReLU(name='relu19')
 
         self.conv20 = Reshape(target_shape=(config.GRID_SIZE, config.GRID_SIZE, config.ANCHOR_SIZE, 5 + config.CLASS_NUM),

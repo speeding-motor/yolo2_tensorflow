@@ -92,12 +92,12 @@ class YoloLoss(keras.losses.Loss):
 
             return c_loss
 
-        # coord_loss = coordinate_loss(y_true[..., 0:5])
+        coord_loss = coordinate_loss(y_true[..., 0:5])
         conf_loss = confidence_loss()
-        # classs_loss = class_loss()
+        classs_loss = class_loss()
 
-        # return (coord_loss + conf_loss + classs_loss) / BATCH_SIZE
-        return conf_loss / BATCH_SIZE
+        return (coord_loss + conf_loss + classs_loss) / BATCH_SIZE
+        # return conf_loss / BATCH_SIZE
 
 if __name__ == '__main__':
     loss = YoloLoss()

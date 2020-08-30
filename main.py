@@ -15,7 +15,7 @@ def main():
     batch_data = pascal.generate_batch_data()
 
     yololoss = YoloLoss()
-    optimizer = tf.optimizers.Adam(learning_rate=0.001)
+    optimizer = tf.optimizers.Adam(learning_rate=0.01)
 
     for epoch in range(EPOCHS):
         i = 0
